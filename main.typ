@@ -3,7 +3,7 @@
 #import "src/lib.typ": *
 
 #show: hsrtreport.with(
-  title: [Aufgabenliste Auszubildende],
+  title: [Azubi Raspberry-Pi],
   author: "",
   variant: "erbe",
   show-titlepage: false,
