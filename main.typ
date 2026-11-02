@@ -154,7 +154,7 @@ Terminal nutzen und Programme ausführen, alles über SSH.
 #unnumbered(level: 3)[Ziel]
 
 Ein Python-Projekt anlegen, das mit einer `pyproject.toml` paketiert ist und
-über den Befehl `main` gestartet wird. Das Programm hat eine Funktion
+über den Befehl `blinky` gestartet wird. Das Programm hat eine Funktion
 `main()` und einen Block #box(`if __name__ == "__main__":`).
 
 #unnumbered(level: 3)[Vorgehen]
@@ -183,7 +183,7 @@ Ein Python-Projekt anlegen, das mit einer `pyproject.toml` paketiert ist und
   dependencies = ["gpiozero"]
 
   [project.scripts]
-  main = "blinky.main:main"
+  blinky = "blinky.main:main"
   ```
 + `src/blinky/main.py` schreiben:
   ```python
@@ -201,7 +201,7 @@ Ein Python-Projekt anlegen, das mit einer `pyproject.toml` paketiert ist und
   source .venv/bin/activate
   pip install -e .
   ```
-+ Das Programm auf zwei Wegen starten: `main` (über das Skript aus der
++ Das Programm auf zwei Wegen starten: `blinky` (über das Skript aus der
   `pyproject.toml`) und `python -m blinky.main` (über den `__main__`-Block).
 + In VS Code unten rechts den Interpreter `.venv` auswählen.
 
@@ -237,7 +237,7 @@ lassen.
 + In `main()` die LED mit `gpiozero.LED(17)` ansteuern: einmal mit einer
   eigenen Schleife aus `on()`, `off()` und `time.sleep()`, einmal mit
   `blink()`.
-+ Programm mit `main` starten und mit `Strg+C` sauber beenden. Den
++ Programm mit `blinky` starten und mit `Strg+C` sauber beenden. Den
   `KeyboardInterrupt` abfangen, damit keine Fehlermeldung erscheint.
 
 #unnumbered(level: 3)[Hinweise]
