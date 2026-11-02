@@ -284,79 +284,113 @@ die LED langsam auf- und abblenden lassen.
 - #res("https://gpiozero.readthedocs.io/en/stable/api_output.html#pwmled")[gpiozero: `PWMLED`]
 - #res("https://de.wikipedia.org/wiki/Pulsdauermodulation")[Wikipedia: Pulsdauermodulation]
 
-= Mikrofon auslesen
+= Mikrofon digital auslesen
 
 #unnumbered(level: 3)[Ziel]
 
-Ein 4-Pin-Mikrofonmodul (A0, G, +, D0) anschließen und die Lautstärke im
-Programm als Zahl auslesen.
+Das 4-Pin-Mikrofonmodul (A0, G, +, D0) anschließen und über den digitalen
+Ausgang D0 erkennen, ob es laut (1) oder leise (0) ist. Die Schaltschwelle wird
+am Potentiometer des Moduls eingestellt.
 
 #unnumbered(level: 3)[Vorgehen]
 
-+ Der Pi hat keine analogen Eingänge. Für den Analogausgang A0 wird ein
-  Analog-Digital-Wandler (ADC) gebraucht, hier ein MCP3008 am SPI-Bus.
-+ SPI aktivieren: `sudo raspi-config` → _Interface Options → SPI_, danach
-  neu starten.
-+ MCP3008 verkabeln:
-  #block(breakable: false, table(
-    columns: (auto, 1fr),
-    table.header([*MCP3008*], [*Raspberry Pi*]),
-    [VDD (16), VREF (15)], [3,3~V (Pin 1)],
-    [AGND (14), DGND (9)], [GND (Pin 6)],
-    [CLK (13)], [GPIO11 / SCLK (Pin 23)],
-    [DOUT (12)], [GPIO9 / MISO (Pin 21)],
-    [DIN (11)], [GPIO10 / MOSI (Pin 19)],
-    [CS (10)], [GPIO8 / CE0 (Pin 24)],
-  ))
-+ Mikrofonmodul verkabeln: `+` → 3,3~V, `G` → GND, `A0` → Kanal 0 des
-  MCP3008 (Pin 1), `D0` → GPIO27 (Pin 13).
-+ Rohwerte mit `gpiozero.MCP3008(channel=0)` lesen (`value` liegt zwischen
-  0 und 1) und ausgeben.
-+ Aus den Rohwerten eine Lautstärke berechnen: z.~B. 200 Werte schnell
-  hintereinander lesen und die Differenz aus Maximum und Minimum
-  (Spitze-Spitze) bilden. Ruhe, Sprechen und Klatschen vergleichen.
-+ Zusätzlich `D0` mit `gpiozero.DigitalInputDevice(27)` lesen und die
-  Schaltschwelle am Potentiometer des Moduls so einstellen, dass Klatschen
-  erkannt wird.
++ Pi ausschalten, bevor etwas verkabelt wird.
++ Modul verkabeln: `+` → 3,3~V (Pin 17), `G` → GND (Pin 14), `D0` → GPIO27
+  (Pin 13). `A0` bleibt frei.
++ Pi starten und `D0` mit `gpiozero.DigitalInputDevice(27)` lesen. Den Wert
+  `value` in einer Schleife ausgeben.
++ Schwelle einstellen: In Ruhe das Potentiometer mit einem kleinen
+  Schraubendreher drehen, bis die Signal-LED auf dem Modul gerade eben
+  ausgeht und das Programm dauerhaft 0 liest. Dann klatschen: Der Wert muss
+  kurz auf 1 springen.
++ Statt ständig abzufragen, mit `when_activated` eine Funktion aufrufen
+  lassen, die jedes Klatschen zählt und ausgibt.
++ Erweiterung: Die LED aus Kapitel 5 bei jedem Klatschen umschalten.
 
 #unnumbered(level: 3)[Hinweise]
 
-- Das Modul mit 3,3~V betreiben, nicht mit 5~V, damit `D0` den GPIO-Pin
-  nicht überlastet.
-- Ohne ADC liefert das Modul über `D0` nur „laut“ oder „leise“, keinen
-  Pegel.
-- Das Mikrofonsignal schwankt um einen Ruhewert. Die Lautstärke steckt in der
-  Schwankung, nicht im einzelnen Messwert.
+- Das Modul mit 3,3~V betreiben, nicht mit 5~V. Sonst liegen am GPIO-Pin
+  5~V an, und der Pin kann kaputtgehen.
+- Je nach Modul ist `D0` bei Lärm 1 oder 0. Mit `active_state` bzw.
+  `pull_up` lässt sich das in gpiozero anpassen.
+- `D0` liefert nur „laut“ oder „leise“, keinen Pegel. Für einen echten
+  Lautstärkewert folgt das nächste Kapitel.
 
 #unnumbered(level: 3)[Ressourcen]
 
-- #res("https://gpiozero.readthedocs.io/en/stable/api_spi.html")[gpiozero: SPI devices (`MCP3008`)]
 - #res("https://gpiozero.readthedocs.io/en/stable/api_input.html")[gpiozero: Input devices]
-- #res("https://www.microchip.com/en-us/product/mcp3008")[Microchip: MCP3008 (Datenblatt)]
-- #res("https://www.raspberrypi.com/documentation/computers/configuration.html")[Raspberry Pi Doku: `raspi-config`]
-- #res("https://randomnerdtutorials.com/?p=129784")[Random Nerd Tutorials: Analog inputs with MCP3008]
+- #res("https://pinout.xyz/")[Pinout-Übersicht]
+
+= USB-Mikrofon analog auslesen
+
+#unnumbered(level: 3)[Ziel]
+
+Mit einem USB-Mikrofon die Lautstärke als Zahl messen, laufend und mit
+Werten zwischen leise und laut.
+
+#unnumbered(level: 3)[Vorgehen]
+
++ USB-Mikrofon anstecken und prüfen, ob der Pi es erkennt: `arecord -l`.
+  Die Ausgabe nennt Karte und Gerät, z.~B. `card 2, device 0`.
++ Eine Testaufnahme machen und unter Windows anhören (in VS Code
+  herunterladen):
+  ```sh
+  arecord -D plughw:2,0 -f S16_LE -r 44100 -c 1 -d 5 test.wav
+  ```
++ Bei Bedarf die Verstärkung mit `alsamixer` anpassen (`F6` → Mikrofon
+  wählen).
++ Benötigte Pakete installieren:
+  `sudo apt install -y python3-numpy libportaudio2`, danach in der `.venv`:
+  `pip install sounddevice`. `sounddevice` und `numpy` auch unter
+  `dependencies` in die `pyproject.toml` eintragen.
++ Mit `sounddevice.query_devices()` das Mikrofon in der Geräteliste finden.
++ Mit `sounddevice.InputStream` kurze Blöcke (z.~B. 1024 Samples) aufnehmen
+  und pro Block den Effektivwert berechnen:
+  ```python
+  rms = numpy.sqrt(numpy.mean(block ** 2))
+  ```
++ Den Wert laufend ausgeben, zusätzlich in Dezibel relativ zum Vollausschlag:
+  `20 * numpy.log10(rms)`. Ruhe, Sprechen und Klatschen vergleichen und die
+  Werte notieren.
+
+#unnumbered(level: 3)[Hinweise]
+
+- `sounddevice` liefert die Samples als `numpy`-Array mit Werten zwischen
+  −1 und 1.
+- In der Callback-Funktion des Streams nur rechnen und den Wert ablegen,
+  nichts Langsames wie `print()` in jedem Durchlauf.
+- Bei `log10(0)` gibt es einen Fehler. Einen kleinen Wert addieren, z.~B.
+  `rms + 1e-9`.
+
+#unnumbered(level: 3)[Ressourcen]
+
+- #res("https://python-sounddevice.readthedocs.io/")[python-sounddevice: Doku]
+- #res("https://manpages.debian.org/arecord")[Manpage: `arecord`]
+- #res("https://numpy.org/doc/stable/user/absolute_beginners.html")[NumPy: Einstieg]
+- #res("https://de.wikipedia.org/wiki/Effektivwert")[Wikipedia: Effektivwert]
 
 = LED-Helligkeit nach Lautstärke
 
 #unnumbered(level: 3)[Ziel]
 
-Die Helligkeit der LED folgt der gemessenen Lautstärke: leise → dunkel,
-laut → hell.
+Die Helligkeit der LED folgt der Lautstärke vom USB-Mikrofon: leise →
+dunkel, laut → hell.
 
 #unnumbered(level: 3)[Vorgehen]
 
-+ Verkabelung aus den Kapiteln LED und Mikrofon kombinieren.
-+ Die Lautstärkemessung aus dem vorigen Kapitel in eine eigene Funktion
-  auslagern, die einen Wert zurückgibt.
++ Die LED aus Kapitel 6 (`PWMLED`) und das USB-Mikrofon aus Kapitel 8
+  zusammen verwenden.
++ Die Lautstärkemessung in eine eigene Funktion auslagern, die einen Wert
+  zurückgibt.
 + Den Wertebereich kalibrieren: Messwert in Ruhe und bei lautem Geräusch
   notieren und als Minimum und Maximum festlegen.
 + Den Messwert auf 0 bis 1 abbilden und begrenzen:
   `max(0.0, min(1.0, (x - minimum) / (maximum - minimum)))`
 + Den Wert an `PWMLED.value` übergeben und das in einer Schleife wiederholen.
-+ Den Wert glätten, damit die LED nicht flackert, z.~B. mit einem gleitenden
-  Mittelwert oder `neu = 0.8 * alt + 0.2 * messung`.
-+ Erweiterung: dasselbe mit den gpiozero-Werkzeugen `source` und `values`
-  lösen.
++ Den Wert glätten, damit die LED nicht flackert, z.~B. mit
+  `neu = 0.8 * alt + 0.2 * messung`.
++ Erweiterung: Die Abbildung über die Dezibel-Werte statt über den
+  Effektivwert machen und vergleichen, was sich natürlicher anfühlt.
 
 #unnumbered(level: 3)[Hinweise]
 
@@ -367,6 +401,5 @@ laut → hell.
 
 #unnumbered(level: 3)[Ressourcen]
 
-- #res("https://gpiozero.readthedocs.io/en/stable/source_values.html")[gpiozero: Source/values]
-- #res("https://gpiozero.readthedocs.io/en/stable/api_tools.html")[gpiozero: Source tools]
+- #res("https://gpiozero.readthedocs.io/en/stable/api_output.html#pwmled")[gpiozero: `PWMLED`]
 - #res("https://de.wikipedia.org/wiki/Exponentielle_Glättung")[Wikipedia: Exponentielle Glättung]
