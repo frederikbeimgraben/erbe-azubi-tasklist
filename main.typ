@@ -9,6 +9,7 @@
   show-titlepage: false,
   show-toc: false,
   skyline: false,
+  chapter-pagebreak: true,
 )
 
 #let res(url, body) = [#body: #link(url)]
