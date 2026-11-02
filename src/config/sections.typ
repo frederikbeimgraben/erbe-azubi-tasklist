@@ -66,6 +66,18 @@
   ))
   set math.equation(numbering: "(1)")
 
+  // The numbering above reads the chapter at the place where it is shown. A
+  // reference from another chapter would then show that chapter's number,
+  // so references to figures take the chapter of the figure itself.
+  show ref: it => {
+    let el = it.element
+    if el == none or el.func() != figure or el.numbering == none { return it }
+    let loc = el.location()
+    let chapter = counter(heading).at(loc).at(0, default: 0)
+    let number = el.counter.at(loc).at(0, default: 0)
+    link(loc)[#el.supplement~#numbering("1.1", chapter, number)]
+  }
+
   body
 }
 

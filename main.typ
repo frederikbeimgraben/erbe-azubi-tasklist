@@ -226,6 +226,45 @@ Ein Python-Projekt anlegen, das mit einer `pyproject.toml` paketiert ist und
 
 = LED blinken lassen
 
+
+#unnumbered(level: 3)[Ziel]
+
+Eine LED an einem GPIO-Pin aus dem Python-Programm im Sekundentakt blinken
+lassen.
+
+#unnumbered(level: 3)[Vorgehen]
+
++ Pi ausschalten, bevor etwas verkabelt wird.
++ Auf dem Steckbrett verkabeln (Pinbelegung: siehe @fig:pinout am Kapitelende): GPIO17 (Pin 11) → Vorwiderstand 330~Ω →
+  Anode der LED (langes Bein); Kathode (kurzes Bein) → GND (Pin 9).
++ Den 330-Ω-Widerstand anhand der Farbringe heraussuchen (Farbcode: siehe
+  @fig:widerstand am Kapitelende). Den Ring, der etwas abgesetzt ist (meist Gold), rechts
+  halten und von links lesen.
++ In `main()` die LED mit `gpiozero.LED(17)` ansteuern: einmal mit einer
+  eigenen Schleife aus `on()`, `off()` und `time.sleep()`, einmal mit
+  `blink()`.
++ Programm mit `blinky` starten und mit `Strg+C` sauber beenden. Den
+  `KeyboardInterrupt` abfangen, damit keine Fehlermeldung erscheint.
+
+
+#unnumbered(level: 3)[Hinweise]
+
+- Die GPIO-Pins arbeiten mit 3,3~V und vertragen keine 5~V.
+- Der Vorwiderstand ist Pflicht. Ohne ihn können LED und GPIO-Pin kaputtgehen.
+- Ältere Anleitungen nutzen `RPi.GPIO`. Diese Bibliothek funktioniert auf dem
+  Pi 5 nicht, weil die GPIOs dort am RP1-Chip hängen. `gpiozero` nutzt
+  automatisch `lgpio`.
+- Pinbelegung auf dem Pi anzeigen: `pinout`, oder @fig:pinout am Kapitelende.
+
+#unnumbered(level: 3)[Ressourcen]
+
+- #res("https://gpiozero.readthedocs.io/en/stable/recipes.html")[gpiozero: Basic recipes]
+- #res("https://gpiozero.readthedocs.io/en/stable/api_output.html")[gpiozero: Output devices]
+- #res("https://pinout.xyz/")[Pinout-Übersicht]
+- #res("https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#gpio")[Raspberry Pi Doku: GPIO]
+
+#unnumbered(level: 3)[Grafiken]
+
 #figure(
   block(width: 75%, {
     pinout(highlight: (9, 11))
@@ -237,25 +276,6 @@ Ein Python-Projekt anlegen, das mit einer `pyproject.toml` paketiert ist und
     Pins am Platinenrand. Markiert: GND (Pin 9) und GPIO17 (Pin 11) für dieses
     Kapitel.],
 ) <fig:pinout>
-
-#unnumbered(level: 3)[Ziel]
-
-Eine LED an einem GPIO-Pin aus dem Python-Programm im Sekundentakt blinken
-lassen.
-
-#unnumbered(level: 3)[Vorgehen]
-
-+ Pi ausschalten, bevor etwas verkabelt wird.
-+ Auf dem Steckbrett verkabeln (siehe @fig:pinout): GPIO17 (Pin 11) → Vorwiderstand 330~Ω →
-  Anode der LED (langes Bein); Kathode (kurzes Bein) → GND (Pin 9).
-+ Den 330-Ω-Widerstand anhand der Farbringe heraussuchen (siehe
-  @fig:widerstand). Den Ring, der etwas abgesetzt ist (meist Gold), rechts
-  halten und von links lesen.
-+ In `main()` die LED mit `gpiozero.LED(17)` ansteuern: einmal mit einer
-  eigenen Schleife aus `on()`, `off()` und `time.sleep()`, einmal mit
-  `blink()`.
-+ Programm mit `blinky` starten und mit `Strg+C` sauber beenden. Den
-  `KeyboardInterrupt` abfangen, damit keine Fehlermeldung erscheint.
 
 #figure(
   grid(
@@ -272,22 +292,6 @@ lassen.
     drei Ziffernringe, danach folgen Multiplikator und Toleranz.],
 ) <fig:widerstand>
 
-#unnumbered(level: 3)[Hinweise]
-
-- Die GPIO-Pins arbeiten mit 3,3~V und vertragen keine 5~V.
-- Der Vorwiderstand ist Pflicht. Ohne ihn können LED und GPIO-Pin kaputtgehen.
-- Ältere Anleitungen nutzen `RPi.GPIO`. Diese Bibliothek funktioniert auf dem
-  Pi 5 nicht, weil die GPIOs dort am RP1-Chip hängen. `gpiozero` nutzt
-  automatisch `lgpio`.
-- Pinbelegung auf dem Pi anzeigen: `pinout`
-
-#unnumbered(level: 3)[Ressourcen]
-
-- #res("https://gpiozero.readthedocs.io/en/stable/recipes.html")[gpiozero: Basic recipes]
-- #res("https://gpiozero.readthedocs.io/en/stable/api_output.html")[gpiozero: Output devices]
-- #res("https://pinout.xyz/")[Pinout-Übersicht]
-- #res("https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#gpio")[Raspberry Pi Doku: GPIO]
-
 = LED-Helligkeit per PWM
 
 #unnumbered(level: 3)[Ziel]
@@ -297,7 +301,7 @@ die LED langsam auf- und abblenden lassen.
 
 #unnumbered(level: 3)[Vorgehen]
 
-+ Verkabelung aus dem vorigen Kapitel beibehalten.
++ Verkabelung aus dem vorigen Kapitel beibehalten (siehe @fig:pinout).
 + Statt `LED` die Klasse `gpiozero.PWMLED(17)` nutzen. Die Eigenschaft
   `value` setzt die Helligkeit von `0.0` (aus) bis `1.0` (voll).
 + In einer Schleife die Helligkeit in kleinen Schritten von 0 auf 1 und
@@ -328,7 +332,7 @@ am Potentiometer des Moduls eingestellt.
 #unnumbered(level: 3)[Vorgehen]
 
 + Pi ausschalten, bevor etwas verkabelt wird.
-+ Modul verkabeln: `+` → 3,3~V (Pin 17), `G` → GND (Pin 14), `D0` → GPIO27
++ Modul verkabeln (Pinbelegung: siehe @fig:pinout): `+` → 3,3~V (Pin 17), `G` → GND (Pin 14), `D0` → GPIO27
   (Pin 13). `A0` bleibt frei.
 + Pi starten und `D0` mit `gpiozero.DigitalInputDevice(27)` lesen. Den Wert
   `value` in einer Schleife ausgeben.
