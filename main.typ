@@ -1,6 +1,8 @@
 // Aufgabenliste für Auszubildende, built on the HSRTReport template.
 
 #import "src/lib.typ": *
+#import "figures/pinout.typ": pinout, pinout-legend
+#import "figures/resistor.typ": color-table, resistor-example
 
 #show: hsrtreport.with(
   title: [Azubi Raspberry-Pi],
@@ -224,6 +226,18 @@ Ein Python-Projekt anlegen, das mit einer `pyproject.toml` paketiert ist und
 
 = LED blinken lassen
 
+#figure(
+  block(width: 75%, {
+    pinout(highlight: (9, 11))
+    v(0.4em)
+    align(center, pinout-legend)
+  }),
+  caption: [GPIO-Leiste des Raspberry Pi 5. Pin 1 hat ein eckiges Lötpad und
+    liegt an der Seite gegenüber den USB-Buchsen; ungerade Pins innen, gerade
+    Pins am Platinenrand. Markiert: GND (Pin 9) und GPIO17 (Pin 11) für dieses
+    Kapitel.],
+) <fig:pinout>
+
 #unnumbered(level: 3)[Ziel]
 
 Eine LED an einem GPIO-Pin aus dem Python-Programm im Sekundentakt blinken
@@ -232,13 +246,31 @@ lassen.
 #unnumbered(level: 3)[Vorgehen]
 
 + Pi ausschalten, bevor etwas verkabelt wird.
-+ Auf dem Steckbrett verkabeln: GPIO17 (Pin 11) → Vorwiderstand 330~Ω →
++ Auf dem Steckbrett verkabeln (siehe @fig:pinout): GPIO17 (Pin 11) → Vorwiderstand 330~Ω →
   Anode der LED (langes Bein); Kathode (kurzes Bein) → GND (Pin 9).
++ Den 330-Ω-Widerstand anhand der Farbringe heraussuchen (siehe
+  @fig:widerstand). Den Ring, der etwas abgesetzt ist (meist Gold), rechts
+  halten und von links lesen.
 + In `main()` die LED mit `gpiozero.LED(17)` ansteuern: einmal mit einer
   eigenen Schleife aus `on()`, `off()` und `time.sleep()`, einmal mit
   `blink()`.
 + Programm mit `blinky` starten und mit `Strg+C` sauber beenden. Den
   `KeyboardInterrupt` abfangen, damit keine Fehlermeldung erscheint.
+
+#figure(
+  grid(
+    columns: (1fr, auto),
+    column-gutter: 1em,
+    align: horizon,
+    resistor-example,
+    color-table,
+  ),
+  kind: image,
+  caption: [Farbcode von Widerständen mit vier Ringen. Links das Beispiel
+    330~Ω: Die ersten zwei Ringe sind Ziffern, der dritte ist der
+    Multiplikator, der vierte die Toleranz. Widerstände mit fünf Ringen haben
+    drei Ziffernringe, danach folgen Multiplikator und Toleranz.],
+) <fig:widerstand>
 
 #unnumbered(level: 3)[Hinweise]
 
