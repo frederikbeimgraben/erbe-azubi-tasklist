@@ -1,13 +1,23 @@
+// Aufgabenliste für Auszubildende, built on the HSRTReport template.
+
 #import "src/lib.typ": *
 
-#show: tasklist.with(
+#show: hsrtreport.with(
   title: [Aufgabenliste Auszubildende],
   author: "",
+  variant: "erbe",
+  show-titlepage: false,
+  show-toc: false,
+  skyline: false,
 )
 
-#task-table(
-  // One array per task, one entry per column, e.g.
-  // ([1], [Lötübung], [...], [...], [01.11.2026], ...),
-  tasks: (),
-  blank-rows: 14,
+#heading(numbering: none)[Aufgabenliste]
+
+#table(
+  columns: (auto, 1fr, auto, auto),
+  align: (center, left, center, center),
+  table.header(
+    [*Nr.*], [*Aufgabe*], [*Datum*], [*Status*],
+  ),
+  // [1], [...], [01.11.2026], [offen],
 )

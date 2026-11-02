@@ -1,0 +1,104 @@
+// Page geometry, running head, footer and background layers.
+
+#import "fonts.typ": *
+#import "colors.typ": *
+#import "../modules/logos.typ" as logos-module
+#import "../modules/watermark.typ": watermark-layer
+
+// True from the first chapter of the body onward. The page number in the
+// footer gets the "von M" suffix from there, also in the back matter.
+#let numbered-body = state("hsrt-numbered-body", false)
+
+// The running head names the chapter that is open on the page. The front
+// matter and the back matter have no numbered chapter, so it stays empty
+// there, as \ifHSRTBackMatter does in the LaTeX class. Without page breaks
+// between chapters, several chapters can start on one page: the head then
+// names the first of them, as \rightmark does in LaTeX.
+#let _active-chapter() = {
+  let page-number = here().page()
+  let chapters = query(heading.where(level: 1))
+    .filter(chapter => chapter.location().page() <= page-number)
+  if chapters.len() == 0 { return none }
+  let starting = chapters.filter(chapter => chapter.location().page() == page-number)
+  if starting.len() > 0 { starting.first() } else { chapters.last() }
+}
+
+#let _chapter-label() = {
+  let chapter = _active-chapter()
+  if chapter == none or chapter.numbering == none { return none }
+  let number = counter(heading).at(chapter.location()).at(0, default: 0)
+  [#number~#sym.dash.en~#chapter.body]
+}
+
+#let _head-foot(body) = text(
+  font: heading-font,
+  size: sizes.normal,
+  fill: head-foot-color,
+  body,
+)
+
+#let header(title: none) = context {
+  _head-foot(grid(
+    columns: (1fr, auto),
+    align: (left, right),
+    title,
+    _chapter-label(),
+  ))
+}
+
+// The logos sit in the footer row, not on the page behind it. The row then
+// keeps one center line for the author, the page number and the logos.
+#let footer(author: none, numbering: "1", logos: (), logos-scale: 1.0) = context {
+  let page-number = counter(page).get().at(0, default: 0)
+  let total = counter(page).final().at(0, default: 0)
+  _head-foot(grid(
+    columns: (1fr, auto, 1fr),
+    align: (left + horizon, center + horizon, right + horizon),
+    author,
+    if numbered-body.get() {
+      [Seite~#std.numbering(numbering, page-number)~von~#std.numbering(numbering, total)]
+    } else {
+      [Seite~#std.numbering(numbering, page-number)]
+    },
+    if logos.len() > 0 {
+      // The logo row ends 0.3cm inside the right margin, as in the LaTeX class.
+      pad(right: 0.3cm, logos-module.footer-logos(logos, scale: logos-scale))
+    },
+  ))
+}
+
+#let background(paper-width: 210mm, watermark: none, skyline: true) = {
+  watermark-layer(watermark)
+  if skyline { logos-module.skyline(paper-width) }
+}
+
+#let page-setup(
+  title: none,
+  author: none,
+  paper: "a4",
+  paper-width: 210mm,
+  margin: 2cm,
+  logos: (),
+  logos-scale: 1.0,
+  watermark: none,
+  skyline: true,
+  page-numbering: "1",
+  body,
+) = {
+  set page(
+    paper: paper,
+    margin: margin,
+    header-ascent: 21.7pt,
+    footer-descent: 5.9pt,
+    numbering: none,
+    header: header(title: title),
+    footer: footer(
+      author: author,
+      numbering: page-numbering,
+      logos: logos,
+      logos-scale: logos-scale,
+    ),
+    background: background(paper-width: paper-width, watermark: watermark, skyline: skyline),
+  )
+  body
+}
